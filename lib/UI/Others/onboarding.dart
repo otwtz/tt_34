@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tt_34/UI/Others/home.dart';
+import 'package:tt_34/Widgets/bottom_navigation_bar.dart';
 import 'package:tt_34/style.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } else {
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen()));
+          MaterialPageRoute(builder: (context) => ChangeBodies(index: 0)));
     }
   }
 

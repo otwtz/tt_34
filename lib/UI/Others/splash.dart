@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tt_34/Widgets/bottom_navigation_bar.dart';
 
 import 'home.dart';
 import 'onboarding.dart';
@@ -27,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => ChangeBodies(index: 0)),
       );
     }
   }

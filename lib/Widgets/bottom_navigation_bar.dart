@@ -46,7 +46,7 @@ class _ChangeBodiesState extends State<ChangeBodies>
         children: [
           HomeScreen(),
           WeightControlScreen(),
-          WaterControlScreen(),
+          WaterScreen(),
           SettingsScreen(),
         ],
       ),

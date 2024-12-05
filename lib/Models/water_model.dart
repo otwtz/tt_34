@@ -1,7 +1,9 @@
+import 'dart:ffi';
+
 class WaterEntry {
   final int? id;
   final DateTime date;
-  final double amount;
+  final int amount;
 
   WaterEntry({this.id, required this.date, required this.amount});
 
@@ -18,6 +20,18 @@ class WaterEntry {
       id: map['id'],
       date: DateTime.parse(map['date']),
       amount: map['amount'],
+    );
+  }
+
+  WaterEntry copyWith({
+    int? id,
+    DateTime? date,
+    int? amount,
+  }) {
+    return WaterEntry(
+        id: id ?? this.id,
+        amount: amount ?? this.amount,
+        date: date ?? this.date
     );
   }
 }

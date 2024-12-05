@@ -24,8 +24,6 @@ class WeightControlScreen extends StatefulWidget {
 class _WeightControlScreenState extends State<WeightControlScreen> {
   List<DateTime?> _dates = [];
 
-  String _startWeight = '0 кг';
-  String _currentWeight = '0 кг';
   final TextEditingController _startWeightController = TextEditingController();
   final TextEditingController _goalWeightController = TextEditingController();
   final TextEditingController _currentWeightController =
@@ -43,49 +41,67 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
     _loadWeights();
   }
 
-  double? startWeight;
-  String _goalWeightString = '0 кг'; // Целевой вес в строковом формате
-  double _goalWeight = 0.0;
+  // double? startWeight;
+  String _goalWeightString = '0 кг';
+  int _goalWeight = 0;
+  int _startWeight = 0;
+  String _startWeightString = '0 кг';
+  String _currentWeightString = '0 кг';
+
   Future<void> _loadWeights() async {
     final prefs = await SharedPreferences.getInstance();
 
     List<String>? weights = prefs.getStringList('weights');
     List<String>? dates = prefs.getStringList('dates');
 
-    _goalWeightString = prefs.getString('goalWeight') ?? '0 кг';
-    _goalWeight = double.tryParse(_goalWeightString.replaceAll(' кг', '')) ?? 0.0; // Преобразование строки в double
-
+    print(_goalWeightString);
     if (weights != null && dates != null) {
       setState(() {
-        _startWeight = prefs.getString('startWeight') ?? '0 кг';
-        _goalWeightString = prefs.getString('goalWeight') ?? '0 кг';
-        _currentWeight = prefs.getString('currentWeight') ?? '0 кг';
+        _goalWeightString = '${prefs.getDouble('goalWeight') ?? 0} кг';
+        _startWeightString = '${prefs.getDouble('startWeight') ?? 0} кг';
+        _currentWeightString = '${prefs.getDouble('currentWeight') ?? 0} кг';
+        _goalWeight = prefs.getDouble('goalWeight')?.toInt() ?? 0;
+        _startWeight = prefs.getDouble('startWeight')?.toInt() ?? 0;
         _weightData = weights.map((e) => double.parse(e)).toList();
         _weightDates = dates.map((e) => DateTime.parse(e)).toList();
       });
     } else {
       setState(() {
-        _startWeight = prefs.getString('startWeight') ?? '0 кг';
-        _goalWeightString = prefs.getString('goalWeight') ?? '0 кг';
-        _currentWeight = prefs.getString('currentWeight') ?? '0 кг';
+        _goalWeightString = '${prefs.getDouble('goalWeight') ?? 0} кг';
+        _startWeightString = '${prefs.getDouble('startWeight') ?? 0} кг';
+        _currentWeightString = prefs.getString('currentWeight') ?? '0 кг';
       });
     }
-
-
+    // _goalWeightString = prefs.getString('goalWeight') ?? '0 кг';
+    _goalWeight = int.tryParse(_goalWeightString.replaceAll(' кг', '')) ?? 0;
   }
 
-  Future<void> _saveWeight(String key, String value) async {
+  Future<void> _saveWeight(String key, double value) async {
     final prefs = await SharedPreferences.getInstance();
-    double currentWeight = double.parse(_currentWeightController.text.trim());
-    await prefs.setString(key, value);
+    await _saveInPrefs(key, value);
+
     setState(() {
-      _weightData.add(currentWeight);
+      _weightData.add(value.toDouble());
       _weightDates.add(_currentDate!);
     });
     await prefs.setStringList(
         'weights', _weightData.map((e) => e.toString()).toList());
     await prefs.setStringList(
         'dates', _weightDates.map((e) => e.toIso8601String()).toList());
+  }
+
+  Future<void> _replaceCurrent(double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _weightData[0] = value;
+    await prefs.setStringList(
+        'weights', _weightData.map((e) => e.toString()).toList());
+    setState(() {});
+  }
+
+  Future<void> _saveInPrefs(String key, double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(key, value);
+    setState(() {});
   }
 
   void _previousDate() {
@@ -97,7 +113,7 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
   void _nextDate() {
     setState(() {
       _currentDate = _currentDate?.add(Duration(days: 1));
-      _currentDate?.weekday == DateTime.monday;
+      // _currentDate?.weekday == DateTime.monday;
     });
   }
 
@@ -105,6 +121,7 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<EntryBloc, EntryState>(builder: (context, state) {
       return Scaffold(
+        resizeToAvoidBottomInset: false,
         body: BlocBuilder<EntryBloc, EntryState>(builder: (context, state) {
           return Container(
             decoration: BoxDecoration(
@@ -142,311 +159,342 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12.0),
-                                    child: Text(
-                                      'Goal',
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12.0),
+                                      child: Text(
+                                        'Goal',
+                                        style: Style.txtStyle.copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 20,
+                                    ),
+                                    GradientText(
+                                      _goalWeightString,
                                       style: Style.txtStyle.copyWith(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      colors: Style.purpleGrad,
+                                    ),
+                                  ],
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                ),
+                                Positioned(
+                                  right: 75,
+                                  top: -18,
+                                  child: CupertinoButton(
+                                    onPressed: () {
+                                      _showWeightDialog(
+                                        _goalWeightController,
+                                        'Goal',
+                                        'goalWeight',
+                                      );
+                                    },
+                                    child: SvgPicture.asset(
+                                      'Assets/Icons/iconamoon_edit-bold (1).svg',
+                                      width: 20,
+                                      color: Color.fromRGBO(255, 255, 255, 1),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 10.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      height: 74,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: Style.darkBlue,
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Weight at startup:',
+                                                  style:
+                                                      Style.txtStyle.copyWith(
+                                                    fontWeight: FontWeight.w400,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                GradientText(
+                                                  _startWeightString,
+                                                  style:
+                                                      Style.txtStyle.copyWith(
+                                                    fontSize: 16,
+                                                  ),
+                                                  colors: Style.purpleGrad,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: 0,
+                                            top: -10,
+                                            child: CupertinoButton(
+                                              onPressed: () {
+                                                _showWeightDialog(
+                                                  _startWeightController,
+                                                  'Weight at startup:',
+                                                  'startWeight',
+                                                );
+                                              },
+                                              child: SvgPicture.asset(
+                                                'Assets/Icons/iconamoon_edit-bold (1).svg',
+                                                width: 20,
+                                                color: Color.fromRGBO(
+                                                    255, 255, 255, 1),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                   SizedBox(
                                     width: 20,
                                   ),
-                                  GradientText(
-                                    _goalWeightString,
-                                    style: Style.txtStyle.copyWith(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    colors: Style.purpleGrad,
-                                  ),
-                                ],
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                              ),
-                              Positioned(
-                                right: 75,
-                                top: -18,
-                                child: CupertinoButton(
-                                  onPressed: () {
-                                    _showWeightDialog(
-                                      _goalWeightController,
-                                      'Goal',
-                                      'goalWeight',
-                                    );
-                                  },
-                                  child: SvgPicture.asset(
-                                    'Assets/Icons/iconamoon_edit-bold (1).svg',
-                                    width: 20,
-                                    color: Color.fromRGBO(255, 255, 255, 1),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    height: 74,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: Style.darkBlue,
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Weight at startup:',
-                                                style: Style.txtStyle.copyWith(
-                                                  fontWeight: FontWeight.w400,
-                                                  fontSize: 14,
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      height: 74,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: Style.darkBlue,
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Current weight:',
+                                                  style:
+                                                      Style.txtStyle.copyWith(
+                                                    fontWeight: FontWeight.w400,
+                                                    fontSize: 14,
+                                                  ),
                                                 ),
-                                              ),
-                                              GradientText(
-                                                _startWeight,
-                                                style: Style.txtStyle.copyWith(
-                                                  fontSize: 16,
+                                                GradientText(
+                                                  _currentWeightString,
+                                                  style:
+                                                      Style.txtStyle.copyWith(
+                                                    fontSize: 16,
+                                                  ),
+                                                  colors: Style.purpleGrad,
                                                 ),
-                                                colors: Style.purpleGrad,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Positioned(
-                                          right: 0,
-                                          top: -10,
-                                          child: CupertinoButton(
-                                            onPressed: () {
-                                              _showWeightDialog(
-                                                _startWeightController,
-                                                'Weight at startup:',
-                                                'startWeight',
-                                              );
-                                            },
-                                            child: SvgPicture.asset(
-                                              'Assets/Icons/iconamoon_edit-bold (1).svg',
-                                              width: 20,
-                                              color: Color.fromRGBO(
-                                                  255, 255, 255, 1),
+                                              ],
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 20,
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    height: 74,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: Style.darkBlue,
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Current weight:',
-                                                style: Style.txtStyle.copyWith(
-                                                  fontWeight: FontWeight.w400,
-                                                  fontSize: 14,
-                                                ),
+                                          Positioned(
+                                            right: 0,
+                                            top: -10,
+                                            child: CupertinoButton(
+                                              onPressed: () {
+                                                _showWeightDialog(
+                                                  _currentWeightController,
+                                                  'Current weight:',
+                                                  'currentWeight',
+                                                );
+                                              },
+                                              child: SvgPicture.asset(
+                                                'Assets/Icons/iconamoon_edit-bold (1).svg',
+                                                width: 20,
+                                                color: Color.fromRGBO(
+                                                    255, 255, 255, 1),
                                               ),
-                                              GradientText(
-                                                _currentWeight,
-                                                style: Style.txtStyle.copyWith(
-                                                  fontSize: 16,
-                                                ),
-                                                colors: Style.purpleGrad,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Positioned(
-                                          right: 0,
-                                          top: -10,
-                                          child: CupertinoButton(
-                                            onPressed: () {
-                                              _showWeightDialog(
-                                                _currentWeightController,
-                                                'Current weight:',
-                                                'currentWeight',
-                                              );
-                                            },
-                                            child: SvgPicture.asset(
-                                              'Assets/Icons/iconamoon_edit-bold (1).svg',
-                                              width: 20,
-                                              color: Color.fromRGBO(
-                                                  255, 255, 255, 1),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              CupertinoButton(
-                                child: Row(
-                                  children: [
-                                    SvgPicture.asset(
-                                        'Assets/Icons/Group (1).svg'),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text(
-                                      DateFormat('MMMM yyyy').format(_currentDate!), // Форматирование текущей даты
-                                      style: Style.txtStyle.copyWith(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
+                                        ],
                                       ),
                                     ),
-
-                                  ],
-                                ),
-                                onPressed: () async {
-                                  await _selectDate(context);
-                                },
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 CupertinoButton(
-                                  child: Icon(
-                                    Icons.arrow_back_ios,
-                                    color: Colors.white,
+                                  child: Row(
+                                    children: [
+                                      SvgPicture.asset(
+                                          'Assets/Icons/Group (1).svg'),
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text(
+                                        DateFormat('MMMM yyyy')
+                                            .format(_currentDate!),
+                                        // Форматирование текущей даты
+                                        style: Style.txtStyle.copyWith(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  onPressed: _previousDate,
-                                ),
-                                Text(
-                                  DateFormat('dd.MM.yyyy')
-                                      .format(_currentDate!),
-                                  style: Style.txtStyle.copyWith(
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                CupertinoButton(
-                                  child: Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: _nextDate,
+                                  onPressed: () async {
+                                    await _selectDate(context);
+                                  },
                                 ),
                               ],
                             ),
-                          ),
-                          Container(
-                            height: 400,
-                            child: LineChart(
-                              LineChartData(
-                                minY: 0, // Минимальное значение по оси Y
-                                maxY: 100,
-                                titlesData: FlTitlesData(
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) {
-                                        return Padding(
-                                          padding: const EdgeInsets.all(2.0),
-                                          child: Text(
-                                            value.toInt().toString(), // Отображение веса
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(color: Colors.white, fontSize: 10),
-                                          ),
-                                        );
-                                      },
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  CupertinoButton(
+                                    child: Icon(
+                                      Icons.arrow_back_ios,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: _previousDate,
+                                  ),
+                                  Text(
+                                    DateFormat('dd.MM.yyyy')
+                                        .format(_currentDate!),
+                                    style: Style.txtStyle.copyWith(
+                                      fontSize: 16,
                                     ),
                                   ),
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) {
-                                        // Отображение даты в формате dd.MM
-                                        int index = value.toInt();
-                                        if (index >= 0 && index < _weightDates.length) {
+                                  CupertinoButton(
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: _nextDate,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              height: 400,
+                              child: LineChart(
+                                LineChartData(
+                                  minY: 0,
+                                  // Минимальное значение по оси Y
+                                  maxY: 100,
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        getTitlesWidget: (value, meta) {
                                           return Padding(
                                             padding: const EdgeInsets.all(2.0),
                                             child: Text(
-                                              DateFormat('dd.MM').format(_weightDates[index]),
-                                              style: TextStyle(color: Colors.white, fontSize: 10),
+                                              value.toInt().toString(),
+                                              // Отображение веса
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10),
                                             ),
                                           );
-                                        }
-                                        return Container(); // Пустое значение, если индекс вне диапазона
-                                      },
+                                        },
+                                      ),
+                                    ),
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        getTitlesWidget: (value, meta) {
+                                          // Отображение даты в формате dd.MM
+                                          int index = value.toInt();
+                                          if (index >= 0 &&
+                                              index < _weightDates.length) {
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.all(2.0),
+                                              child: Text(
+                                                DateFormat('dd.MM').format(
+                                                    _weightDates[index]),
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10),
+                                              ),
+                                            );
+                                          }
+                                          return Container(); // Пустое значение, если индекс вне диапазона
+                                        },
+                                      ),
                                     ),
                                   ),
+                                  borderData: FlBorderData(show: true),
+                                  gridData: FlGridData(show: true),
+                                  lineBarsData: [
+                                    LineChartBarData(
+                                      spots: _weightData
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                        int index = entry.key;
+                                        double value = entry.value.toDouble();
+                                        return FlSpot(
+                                            index.toDouble(),
+                                            value.clamp(0,
+                                                100)); // Ограничение значения от 0 до 100
+                                      }).toList(),
+                                      isCurved: true,
+                                      color: Color.fromRGBO(60, 169, 236, 1),
+                                      dotData: FlDotData(show: true),
+                                      belowBarData: BarAreaData(show: false),
+                                    ),
+                                    LineChartBarData(
+                                      spots: _goalWeight > 0
+                                          ? List.generate(
+                                              _weightData.length < 7
+                                                  ? 7
+                                                  : _weightData.length,
+                                              (index) {
+                                              return FlSpot(index.toDouble(),
+                                                  _goalWeight.toDouble());
+                                            })
+                                          : [],
+                                      isCurved: false,
+                                      color: Color.fromRGBO(203, 146, 255, 1),
+                                      dotData: FlDotData(show: false),
+                                      belowBarData: BarAreaData(show: false),
+                                    ),
+                                  ],
                                 ),
-                                borderData: FlBorderData(show: true),
-                                gridData: FlGridData(show: true),
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    spots: _weightData.asMap().entries.map((entry) {
-                                      int index = entry.key;
-                                      double value = entry.value;
-                                      return FlSpot(index.toDouble(), value.clamp(0, 100)); // Ограничение значения от 0 до 100
-                                    }).toList(),
-                                    isCurved: true,
-                                    color: Color.fromRGBO(60, 169, 236, 1),
-                                    dotData: FlDotData(show: true),
-                                    belowBarData: BarAreaData(show: false),
-                                  ),
-                                  LineChartBarData(
-                                    spots: List.generate(_weightData.length, (index) {
-                                      return FlSpot(index.toDouble(), _goalWeight.clamp(0, 100)); // Используем _goalWeight с ограничением
-                                    }),
-                                    isCurved: false,
-                                    color: Color.fromRGBO(203, 146, 255, 1), // Цвет линии целевого веса
-                                    dotData: FlDotData(show: false),
-                                    belowBarData: BarAreaData(show: false),
-                                  ),
-                                ],
                               ),
                             ),
-
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -577,7 +625,10 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
   }
 
   void _showWeightDialog(
-      TextEditingController controller, String title, String weightType) {
+    TextEditingController controller,
+    String title,
+    String weightType,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -626,18 +677,26 @@ class _WeightControlScreenState extends State<WeightControlScreen> {
             CupertinoButton(
               onPressed: () {
                 setState(() {
-                  String weightValue = controller.text.trim() + ' кг';
+                  int weightValue = int.tryParse(controller.text.trim()) ?? 0;
                   if (weightType == 'startWeight') {
-                    _startWeight = weightValue;
-                    _saveWeight('startWeight', weightValue);
+                    if (_startWeightString == '0.0 кг') {
+                      _startWeightString = '$weightValue кг';
+                      _saveWeight('startWeight', weightValue.toDouble());
+                    } else {
+                      print('dfkskdf: ${weightValue}');
+                      _startWeightString = '$weightValue кг';
+                      _replaceCurrent(weightValue.toDouble());
+                    }
                   } else if (weightType == 'currentWeight') {
-                    _currentWeight = weightValue;
-                    _saveWeight('currentWeight', weightValue);
+                    _currentWeightString = '$weightValue кг';
+                    _saveWeight('currentWeight', weightValue.toDouble());
                   } else if (weightType == 'goalWeight') {
-                    _goalWeightString = weightValue;
-                    _saveWeight('goalWeight', weightValue);
+                    _goalWeightString = '$weightValue кг';
+                    _goalWeight = weightValue;
+                    _saveInPrefs('goalWeight', weightValue.toDouble());
                   }
                 });
+                controller.clear();
                 Navigator.of(context).pop();
               },
               child: Container(

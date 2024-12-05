@@ -16,8 +16,14 @@ void main() {
       providers: [
         BlocProvider(create: (_) => RecordBloc(RecordRepository())),
         BlocProvider(
-          create: (context) => WaterBloc(DatabaseHelperWater())..add(LoadWaterEntriesEvent(DateTime.now())),
-        ),        BlocProvider(
+          create: (context) {
+            final waterBloc = WaterBloc(WaterEntryRepository());
+            // Dispatch an event to load today's water entries
+            waterBloc.add(LoadWaterEntriesEvent(DateTime.now()));
+            return waterBloc;
+          },
+        ),
+        BlocProvider(
           create: (_) => EntryBloc(CurEntryRepository()),
         ),
       ],

@@ -5,6 +5,7 @@ import 'package:tt_34/UI/WEight/weight.dart';
 import 'package:tt_34/Widgets/bottom_navigation_bar.dart';
 import 'UI/Entry/day_and_entries.dart';
 import 'UI/Others/onboarding.dart';
+import 'UI/Others/splash.dart';
 import 'UI/Water/water.dart';
 
 class MyApp extends StatelessWidget {
@@ -13,9 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ChangeBodies(
-        index: 0,
-      ),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
