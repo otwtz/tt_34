@@ -16,10 +16,9 @@ class EntryListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<RecordBloc, RecordState>(
       builder: (context, state) {
-        if (state.isLoading) {
-          return Center(child: CircularProgressIndicator());
-        }
-
+        // if (state.isLoading) {
+        //   return Center(child: CircularProgressIndicator());
+        // }
         if (state.records.isEmpty) {
           return Center(child: Text('Нет записей'));
         }
@@ -55,7 +54,7 @@ class EntryListScreen extends StatelessWidget {
                           fontWeight: FontWeight.w400,
                           fontSize: 14,
                         ),
-                        overflow: TextOverflow.ellipsis, // Обрезка текста с троеточием
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

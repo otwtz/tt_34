@@ -15,7 +15,7 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
       final records = await repository.getAllRecords();
       emit(state.copyWith(
           records: records, isLoading: false, currentEntryByDate: records));
-      add(GetRecordsByDateEvent(state.currentDateTime ?? DateTime.now()));
+      // add(GetRecordsByDateEvent(state.currentDateTime ?? DateTime.now()));
     });
 
     on<LoadRecordEvent>((event, emit) async {
@@ -71,7 +71,6 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
           isLoading: false,
           currentDateTime: event.date));
     });
-
     add(GetRecordsByDateEvent(DateTime.now()));
   }
 
