@@ -22,6 +22,7 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
   bool _isButtonEnabled = false;
 
   final TextEditingController _entryEditingController = TextEditingController();
+
   void _updateButtonState() {
     setState(() {
       _isButtonEnabled = _entryEditingController.text.isNotEmpty;
@@ -30,12 +31,12 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
 
   Future<void> _addTask(BuildContext context) async {
     final title = _entryEditingController.text;
-    if(_isButtonEnabled) {
-      final entry = Entry(content: title, date:DateTime.now() );
+    if (_isButtonEnabled) {
+      final entry = Entry(content: title, date: DateTime.now());
       context.read<RecordBloc>().add(AddRecordEvent(entry));
       context.read<RecordBloc>().add(GetRecordsByDateEvent(DateTime.now()));
       await Future.delayed(Duration(milliseconds: 100));
-      Navigator.of(context).push(
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => DayAndEntries(),
         ),
@@ -47,7 +48,6 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +76,9 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        context.read<RecordBloc>().add(GetRecordsByDateEvent(DateTime.now()));
+                        context
+                            .read<RecordBloc>()
+                            .add(GetRecordsByDateEvent(DateTime.now()));
                         Navigator.of(context).pop();
                       },
                     ),
@@ -103,16 +105,17 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10.0),
                             child: Row(
                               children: [
                                 Text(
-                                  DateFormat('dd.MM.yyyy').format(DateTime.now()),
-                                  style: Style.txtStyle.copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 12,
-                                  )
-                                ),
+                                    DateFormat('dd.MM.yyyy')
+                                        .format(DateTime.now()),
+                                    style: Style.txtStyle.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12,
+                                    )),
                               ],
                             ),
                           ),
@@ -122,7 +125,8 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
                               controller: _entryEditingController,
                               onChanged: (value) => _updateButtonState(),
                               decoration: InputDecoration(
-                                hintText: 'What happened to you during the day? Describe a\nsituation that caused positive or negative emotions', // Подсказка
+                                hintText:
+                                    'What happened to you during the day? Describe a\nsituation that caused positive or negative emotions',
                                 hintStyle: Style.txtStyle.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
@@ -130,8 +134,7 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
                                 ),
                                 border: InputBorder.none,
                                 filled: true,
-                                fillColor:
-                                    Colors.transparent,
+                                fillColor: Colors.transparent,
                               ),
                               style: Style.txtStyle.copyWith(
                                 fontSize: 14,
@@ -154,20 +157,35 @@ class _EntryControlScreenState extends State<EntryControlScreen> {
                 alignment: Alignment.bottomCenter,
                 child: Positioned(
                   bottom: 40,
-                    child: CupertinoButton(
-                  onPressed: _isButtonEnabled ?() => _addTask(context) : null,
-                  child: Container(
-                    width: 186,
-                    height: 59,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: Style.blueGrad),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text('Save',style: Style.txtStyle.copyWith(fontSize: 16),),
+                  child: CupertinoButton(
+                    onPressed: _entryEditingController.text.isNotEmpty
+                        ? () => _addTask(context)
+                        : null,
+                    child: Opacity(
+                      opacity:
+                      _isButtonEnabled ? 1.0 : 0.5,
+                      child: Container(
+                        width: 186,
+                        height: 59,
+                        decoration: BoxDecoration(
+                          gradient: _isButtonEnabled
+                              ? LinearGradient(
+                                  colors: Style
+                                      .blueGrad)
+                              : LinearGradient(
+                                  colors: [Colors.grey, Colors.grey]),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Save',
+                            style: Style.txtStyle.copyWith(fontSize: 16),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                )),
+                ),
               ),
             ),
           ],
